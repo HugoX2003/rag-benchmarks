@@ -226,8 +226,18 @@ if __name__ == "__main__":
 
     conn.close()
 
-    print("\n=== RESULTADOS FINALES ===")
-    print(f"{'Estrategia':<25} {'Faithfulness':<15} {'Answer Relevancy':<18} {'Latencia (ms)':<15} {'Chunks'}")
-    print("-" * 80)
-    print(f"{'Solo semántico':<25} {np.mean(resultados['semantico']['faithfulness']):<15.3f} {np.mean(resultados['semantico']['answer_relevancy']):<18.3f} {np.mean(resultados['semantico']['latencias']):<15.2f} {TOP_K}")
-    print(f"{'Híbrido 60/40':<25} {np.mean(resultados['hibrido']['faithfulness']):<15.3f} {np.mean(resultados['hibrido']['answer_relevancy']):<18.3f} {np.mean(resultados['hibrido']['latencias']):<15.2f} {TOP_K}")
+    ancho = 78
+    print("\n")
+    print("=" * ancho)
+    print(f"{'BENCHMARK - ESTRATEGIAS DE RETRIEVAL':^{ancho}}")
+    print(f"{'Corpus: PDFs NISIRA ERP | Queries: ' + str(len(QUERIES)) + ' | Top-K: ' + str(TOP_K):^{ancho}}")
+    print("=" * ancho)
+    print(f"{'Estrategia':<20} {'Faithfulness':>13} {'Answer Relevancy':>17} {'Latencia (ms)':>14} {'Chunks':>8}")
+    print("-" * ancho)
+    print(f"{'Solo semantico':<20} {np.mean(resultados['semantico']['faithfulness']):>13.3f} {np.mean(resultados['semantico']['answer_relevancy']):>17.3f} {np.mean(resultados['semantico']['latencias']):>14.2f} {TOP_K:>8}")
+    print(f"{'Hibrido 60/40':<20} {np.mean(resultados['hibrido']['faithfulness']):>13.3f} {np.mean(resultados['hibrido']['answer_relevancy']):>17.3f} {np.mean(resultados['hibrido']['latencias']):>14.2f} {TOP_K:>8}")
+    print("=" * ancho)
+    print(f"  Hibrido: alpha={0.6} semantico / {0.4} lexical (BM25 via ts_rank, Spanish)")
+    print(f"  Chunk size: {CHUNK_SIZE} | Overlap: {OVERLAP} | Embedding: all-mpnet-base-v2")
+    print(f"  LLM-judge: {MODEL_LLM.split('/')[-1]} via OpenRouter")
+    print("=" * ancho)
