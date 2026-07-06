@@ -1,3 +1,4 @@
+import re
 import time
 import os
 import numpy as np
@@ -79,7 +80,6 @@ Puntuación de relevancia (0-1):"""
             print(f"    RESPUESTA API: {data}")
             return 0.5
         text = data["choices"][0]["message"]["content"].strip()
-        import re
         numeros = re.findall(r'\d+\.?\d*', text)
         if numeros:
             valor = float(numeros[0])
@@ -123,15 +123,27 @@ if __name__ == "__main__":
     print("Cargando modelo y textos...")
     modelo = SentenceTransformer("all-mpnet-base-v2")
     textos = extraer_textos(PDF_FOLDER)
-    print(f"Documentos cargados: {len(textos)}")
-    print(f"Ejemplo doc 1: {textos[0][:100]}")
-    print(f"Ejemplo doc 50: {textos[49][:100]}")
-    print(f"Ejemplo doc 100: {textos[99][:100]}")
+    print(f"Documentos cargados: {len(textos)}\n")
 
-    print(f"\n{'chunk_size':<12} {'overlap':<10} {'Chunks':<10} {'Indexación(s)':<15} {'CR promedio'}")
-    print("-" * 60)
-
+    filas = []
     for chunk_size, overlap in CONFIGURACIONES:
-        print(f"\nBenchmarking chunk_size={chunk_size}, overlap={overlap}...")
+        print(f"Benchmarking chunk_size={chunk_size}, overlap={overlap}...")
         n_chunks, t_idx, cr = benchmark_chunking(chunk_size, overlap, textos, modelo)
-        print(f"{chunk_size:<12} {overlap:<10} {n_chunks:<10} {t_idx:<15} {cr}")
+        filas.append((chunk_size, overlap, n_chunks, t_idx, cr))
+        print()
+
+    ancho = 74
+    print("\n")
+    print("=" * ancho)
+    print(f"{'BENCHMARK - ESTRATEGIAS DE CHUNKING':^{ancho}}")
+    print(f"{'Modelo embedding: all-mpnet-base-v2 | Queries LLM-judge: ' + str(len(QUERIES)):^{ancho}}")
+    print("=" * ancho)
+    print(f"{'Chunk size':>11} {'Overlap':>8} {'Chunks':>8} {'Indexacion (s)':>15} {'CR promedio':>12}")
+    print("-" * ancho)
+    for chunk_size, overlap, n_chunks, t_idx, cr in filas:
+        print(f"{chunk_size:>11} {overlap:>8} {n_chunks:>8} {t_idx:>15.2f} {cr:>12.3f}")
+    print("=" * ancho)
+    print(f"  CR: Context Relevance, evaluada con {MODEL.split('/')[-1]} via OpenRouter")
+    print(f"  Overlap: {int(CONFIGURACIONES[0][1]/CONFIGURACIONES[0][0]*100)}% del chunk size en todas las configuraciones")
+    print(f"  Corpus: {len(textos)} documentos PDF del sistema NISIRA ERP")
+    print("=" * ancho)
