@@ -1,0 +1,66 @@
+name: RAG Benchmarks
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: ${{ vars.PG_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.PG_PASSWORD }}
+          POSTGRES_DB: ${{ vars.PG_DBNAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      PG_HOST: localhost
+      PG_PORT: 5432
+      PG_DBNAME: ${{ vars.PG_DBNAME }}
+      PG_USER: ${{ vars.PG_USER }}
+      PG_PASSWORD: ${{ secrets.PG_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Enable pgvector extension
+        run: |
+          PGPASSWORD=${{ secrets.PG_PASSWORD }} psql \
+            -h localhost -U ${{ vars.PG_USER }} -d ${{ vars.PG_DBNAME }} \
+            -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Run benchmark - Vector DB
+        run: python benchmark_vectordb.py
+
+      - name: Run benchmark - Embeddings
+        run: python benchmark_embeddings.py
+
+      - name: Run benchmark - Chunking
+        run: python benchmark_chunking.py
+
+      - name: Run benchmark - Retrieval
+        run: python benchmark_retrieval.py
+
+      - name: Run benchmark - LLM
+        run: python benchmark_llm.py
