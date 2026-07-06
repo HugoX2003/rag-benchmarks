@@ -170,8 +170,18 @@ if __name__ == "__main__":
         print(f"\n--- {nombre} ({modelo_id}) ---")
         resultados[nombre] = evaluar_modelo(nombre, modelo_id, chunks_por_query)
 
-    print("\n\n=== RESULTADOS FINALES ===")
-    print(f"{'Modelo':<20} {'Faithfulness':<15} {'Answer Relevancy':<18} {'Latencia gen (ms)'}")
-    print("-" * 70)
+    ancho = 76
+    print("\n")
+    print("=" * ancho)
+    print(f"{'BENCHMARK - MODELOS LLM COMO JUEZ':^{ancho}}")
+    print(f"{'Corpus: PDFs NISIRA ERP | Queries: ' + str(len(QUERIES)) + ' | Top-K contexto: ' + str(TOP_K):^{ancho}}")
+    print("=" * ancho)
+    print(f"{'Modelo':<22} {'Faithfulness':>13} {'Answer Relevancy':>17} {'Latencia gen (ms)':>18}")
+    print("-" * ancho)
     for nombre, res in resultados.items():
-        print(f"{nombre:<20} {res['faithfulness']:<15} {res['answer_relevancy']:<18} {res['latencia_ms']}")
+        print(f"{nombre:<22} {res['faithfulness']:>13.3f} {res['answer_relevancy']:>17.3f} {res['latencia_ms']:>18.0f}")
+    print("=" * ancho)
+    print(f"  Latencia: promedio de 2 llamadas LLM por query (faithfulness + answer relevancy)")
+    print(f"  Chunk size: {CHUNK_SIZE} | Overlap: {OVERLAP} | Embedding: all-mpnet-base-v2")
+    print(f"  Modelos evaluados via OpenRouter")
+    print("=" * ancho)
